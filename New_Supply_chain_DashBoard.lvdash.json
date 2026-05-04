@@ -1,0 +1,1772 @@
+{
+  "datasets": [
+    {
+      "name": "9c066e52",
+      "displayName": "Inventory Stock Snapshot Sample Data",
+      "queryLines": [
+        "SELECT\r\n",
+        "  sku_id,\r\n",
+        "  location_id,\r\n",
+        "  SUM(closing_stock) as closing_stock\r\n",
+        "FROM\r\n",
+        "  supply_chain.gold.inventory_snapshot\r\n",
+        "GROUP BY\r\n",
+        "  sku_id,\r\n",
+        "  location_id\r\n",
+        "LIMIT 20"
+      ]
+    },
+    {
+      "name": "e9a28ecd",
+      "displayName": "Demand Supply Gap Analysis",
+      "queryLines": [
+        "SELECT\r\n",
+        "  sku_id,\r\n",
+        "  total_demand,\r\n",
+        "  total_supply,\r\n",
+        "  gap,\r\n",
+        "  CASE\r\n",
+        "    WHEN gap > 0 THEN 'SHORTAGE'\r\n",
+        "    WHEN gap < 0 THEN 'EXCESS'\r\n",
+        "    ELSE 'BALANCED'\r\n",
+        "  END AS status\r\n",
+        "FROM\r\n",
+        "  supply_chain.gold.demand_supply_gap\r\n",
+        "LIMIT 20"
+      ]
+    },
+    {
+      "name": "4ca61970",
+      "displayName": "Top Four Supply Demand Gap Status Summary",
+      "queryLines": [
+        "SELECT\r\n",
+        "  g.sku_id,\r\n",
+        "  COALESCE(p.product_name, g.sku_id) AS product_label,\r\n",
+        "  g.total_demand,\r\n",
+        "  g.total_supply,\r\n",
+        "  g.gap,\r\n",
+        "  CASE\r\n",
+        "    WHEN g.gap > 0 THEN 'SHORTAGE'\r\n",
+        "    WHEN g.gap < 0 THEN 'EXCESS'\r\n",
+        "    ELSE 'BALANCED'\r\n",
+        "  END AS status\r\n",
+        "FROM\r\n",
+        "  supply_chain.gold.demand_supply_gap g\r\n",
+        "    LEFT JOIN supply_chain.silver.products_catalog p\r\n",
+        "      ON g.sku_id = p.sku_id\r\n",
+        "LIMIT 20"
+      ]
+    },
+    {
+      "name": "3ddf3990",
+      "displayName": "Supplier Performance Metrics and Status Overview",
+      "queryLines": [
+        "SELECT\r\n",
+        "  s.supplier_id,\r\n",
+        "  s.supplier_name,\r\n",
+        "  CONCAT(s.supplier_name, ' (', s.supplier_id, ')') AS supplier_label,\r\n",
+        "  p.avg_open_qty,\r\n",
+        "  p.avg_received_qty,\r\n",
+        "  CASE\r\n",
+        "    WHEN p.avg_open_qty = 0 THEN 'EXCELLENT'\r\n",
+        "    WHEN p.avg_open_qty < 5 THEN 'GOOD'\r\n",
+        "    ELSE 'POOR'\r\n",
+        "  END AS performance_status\r\n",
+        "FROM\r\n",
+        "  supply_chain.gold.supplier_performance p\r\n",
+        "    LEFT JOIN supply_chain.silver.suppliers s\r\n",
+        "      ON p.sup_id = s.supplier_id\r\n"
+      ]
+    },
+    {
+      "name": "5caa8ff2",
+      "displayName": "Supplier Performance Insights",
+      "queryLines": [
+        "SELECT \r\n",
+        "    CASE \r\n",
+        "        WHEN avg_open_qty = 0 THEN 'EXCELLENT'\r\n",
+        "        WHEN avg_open_qty < 5 THEN 'GOOD'\r\n",
+        "        ELSE 'POOR'\r\n",
+        "    END AS performance_status,\r\n",
+        "    COUNT(*) AS supplier_count\r\n",
+        "FROM supply_chain.gold.supplier_performance\r\n",
+        "GROUP BY performance_status;"
+      ]
+    },
+    {
+      "name": "3659d188",
+      "displayName": "Booking Type Revenue Summary Report",
+      "queryLines": [
+        "SELECT \r\n",
+        "    booking_type,\r\n",
+        "    SUM(revenue) AS total_revenue\r\n",
+        "FROM supply_chain.silver.silver_loads\r\n",
+        "GROUP BY booking_type;"
+      ]
+    },
+    {
+      "name": "edabb80d",
+      "displayName": "Fuel Cost and Extra Charges Summary",
+      "queryLines": [
+        "SELECT \r\n",
+        "    'Fuel Cost' AS cost_type,\r\n",
+        "    SUM(fuel_surcharge) AS amount\r\n",
+        "FROM supply_chain.silver.silver_loads\r\n",
+        "\r\n",
+        "UNION ALL\r\n",
+        "\r\n",
+        "SELECT \r\n",
+        "    'Accessorial Charges' AS cost_type,\r\n",
+        "    SUM(accessorial_charges) AS amount\r\n",
+        "FROM supply_chain.silver.silver_loads;"
+      ]
+    },
+    {
+      "name": "76564f48",
+      "displayName": "Booking Type Revenue Cost and Profit Summary",
+      "queryLines": [
+        "SELECT \r\n",
+        "    booking_type,\r\n",
+        "    SUM(revenue) AS total_revenue,\r\n",
+        "    SUM(fuel_surcharge + accessorial_charges) AS total_cost,\r\n",
+        "    SUM(revenue - (fuel_surcharge + accessorial_charges)) AS profit,\r\n",
+        "    ROUND(\r\n",
+        "        SUM(revenue - (fuel_surcharge + accessorial_charges)) * 100.0 / SUM(revenue),\r\n",
+        "        2\r\n",
+        "    ) AS profit_margin\r\n",
+        "FROM supply_chain.silver.silver_loads\r\n",
+        "GROUP BY booking_type;"
+      ]
+    },
+    {
+      "name": "total_revenue_kpi",
+      "displayName": "Total Order Value KPI",
+      "queryLines": [
+        "SELECT\n",
+        "  SUM(revenue) AS total_revenue\n",
+        "FROM\n",
+        "  supply_chain.silver.silver_loads"
+      ]
+    },
+    {
+      "name": "total_stock_kpi",
+      "displayName": "Total Stock KPI",
+      "queryLines": [
+        "SELECT\n",
+        "  SUM(closing_stock) AS total_stock\n",
+        "FROM\n",
+        "  supply_chain.gold.inventory_snapshot"
+      ]
+    },
+    {
+      "name": "total_orders_kpi",
+      "displayName": "Total Orders KPI",
+      "queryLines": [
+        "SELECT\n",
+        "  COUNT(DISTINCT load_id) AS total_orders\n",
+        "FROM\n",
+        "  supply_chain.silver.silver_loads"
+      ]
+    },
+    {
+      "name": "20e1afff",
+      "displayName": "Shipment Detention Analysis by Warehouse and Time Intervals",
+      "queryLines": [
+        "SELECT\r\n",
+        "  event_id AS shipment_id,\r\n",
+        "  facility_id AS warehouse_id,\r\n",
+        "  scheduled_datetime AS arrival_time,\r\n",
+        "  actual_datetime AS loading_start_time,\r\n",
+        "  detention_minutes,\r\n",
+        "  CASE\r\n",
+        "    WHEN detention_minutes > 60 THEN 'HIGH'\r\n",
+        "    WHEN detention_minutes > 30 THEN 'MEDIUM'\r\n",
+        "    ELSE 'LOW'\r\n",
+        "  END AS detention_level\r\n",
+        "FROM\r\n",
+        "  supply_chain.silver.silver_delivery_events\r\n",
+        "LIMIT 20;"
+      ]
+    },
+    {
+      "name": "delivery_status",
+      "displayName": "Order Delivery Status Summary",
+      "queryLines": [
+        "WITH order_events AS (\n",
+        "  SELECT\n",
+        "    load_id,\n",
+        "    MAX(\n",
+        "      CASE\n",
+        "        WHEN event_type = 'DELIVERY' THEN 1\n",
+        "        ELSE 0\n",
+        "      END\n",
+        "    ) AS has_delivery,\n",
+        "    MAX(\n",
+        "      CASE\n",
+        "        WHEN event_type = 'PICKUP' THEN 1\n",
+        "        ELSE 0\n",
+        "      END\n",
+        "    ) AS has_pickup\n",
+        "  FROM\n",
+        "    supply_chain.silver.silver_delivery_events\n",
+        "  GROUP BY\n",
+        "    load_id\n",
+        "),\n",
+        "all_orders AS (\n",
+        "  SELECT DISTINCT\n",
+        "    load_id\n",
+        "  FROM\n",
+        "    supply_chain.silver.silver_loads\n",
+        ")\n",
+        "SELECT\n",
+        "  CASE\n",
+        "    WHEN oe.has_delivery = 1 THEN 'Delivered'\n",
+        "    WHEN\n",
+        "      oe.has_pickup = 1\n",
+        "      AND oe.has_delivery = 0\n",
+        "    THEN\n",
+        "      'In Transit'\n",
+        "    ELSE 'Not Delivered'\n",
+        "  END AS delivery_status,\n",
+        "  COUNT(ao.load_id) AS order_count\n",
+        "FROM\n",
+        "  all_orders ao\n",
+        "    LEFT JOIN order_events oe\n",
+        "      ON ao.load_id = oe.load_id\n",
+        "GROUP BY\n",
+        "  CASE\n",
+        "    WHEN oe.has_delivery = 1 THEN 'Delivered'\n",
+        "    WHEN\n",
+        "      oe.has_pickup = 1\n",
+        "      AND oe.has_delivery = 0\n",
+        "    THEN\n",
+        "      'In Transit'\n",
+        "    ELSE 'Not Delivered'\n",
+        "  END"
+      ]
+    },
+    {
+      "name": "in_transit_kpi",
+      "displayName": "In Transit Orders KPI",
+      "queryLines": [
+        "SELECT\n",
+        "  SUM(\n",
+        "    CASE\n",
+        "      WHEN delivery_status = 'In Transit' THEN order_count\n",
+        "      ELSE 0\n",
+        "    END\n",
+        "  ) AS in_transit_count\n",
+        "FROM\n",
+        "  (\n",
+        "    WITH order_events AS (\n",
+        "      SELECT\n",
+        "        load_id,\n",
+        "        MAX(\n",
+        "          CASE\n",
+        "            WHEN event_type = 'DELIVERY' THEN 1\n",
+        "            ELSE 0\n",
+        "          END\n",
+        "        ) AS has_delivery,\n",
+        "        MAX(\n",
+        "          CASE\n",
+        "            WHEN event_type = 'PICKUP' THEN 1\n",
+        "            ELSE 0\n",
+        "          END\n",
+        "        ) AS has_pickup\n",
+        "      FROM\n",
+        "        supply_chain.silver.silver_delivery_events\n",
+        "      GROUP BY\n",
+        "        load_id\n",
+        "    )\n",
+        "    SELECT\n",
+        "      CASE\n",
+        "        WHEN\n",
+        "          oe.has_pickup = 1\n",
+        "          AND oe.has_delivery = 0\n",
+        "        THEN\n",
+        "          'In Transit'\n",
+        "        ELSE 'Other'\n",
+        "      END AS delivery_status,\n",
+        "      COUNT(*) AS order_count\n",
+        "    FROM\n",
+        "      supply_chain.silver.silver_loads ao\n",
+        "        LEFT JOIN order_events oe\n",
+        "          ON ao.load_id = oe.load_id\n",
+        "    GROUP BY\n",
+        "      CASE\n",
+        "        WHEN\n",
+        "          oe.has_pickup = 1\n",
+        "          AND oe.has_delivery = 0\n",
+        "        THEN\n",
+        "          'In Transit'\n",
+        "        ELSE 'Other'\n",
+        "      END\n",
+        "  )"
+      ]
+    },
+    {
+      "name": "not_delivered_kpi",
+      "displayName": "Not Delivered Orders KPI",
+      "queryLines": [
+        "SELECT\n",
+        "  SUM(\n",
+        "    CASE\n",
+        "      WHEN delivery_status = 'Not Delivered' THEN order_count\n",
+        "      ELSE 0\n",
+        "    END\n",
+        "  ) AS not_delivered_count\n",
+        "FROM\n",
+        "  (\n",
+        "    WITH order_events AS (\n",
+        "      SELECT\n",
+        "        load_id,\n",
+        "        MAX(\n",
+        "          CASE\n",
+        "            WHEN event_type = 'DELIVERY' THEN 1\n",
+        "            ELSE 0\n",
+        "          END\n",
+        "        ) AS has_delivery,\n",
+        "        MAX(\n",
+        "          CASE\n",
+        "            WHEN event_type = 'PICKUP' THEN 1\n",
+        "            ELSE 0\n",
+        "          END\n",
+        "        ) AS has_pickup\n",
+        "      FROM\n",
+        "        supply_chain.silver.silver_delivery_events\n",
+        "      GROUP BY\n",
+        "        load_id\n",
+        "    )\n",
+        "    SELECT\n",
+        "      CASE\n",
+        "        WHEN\n",
+        "          oe.has_delivery = 0\n",
+        "          AND oe.has_pickup = 0\n",
+        "        THEN\n",
+        "          'Not Delivered'\n",
+        "        ELSE 'Other'\n",
+        "      END AS delivery_status,\n",
+        "      COUNT(*) AS order_count\n",
+        "    FROM\n",
+        "      supply_chain.silver.silver_loads ao\n",
+        "        LEFT JOIN order_events oe\n",
+        "          ON ao.load_id = oe.load_id\n",
+        "    GROUP BY\n",
+        "      CASE\n",
+        "        WHEN\n",
+        "          oe.has_delivery = 0\n",
+        "          AND oe.has_pickup = 0\n",
+        "        THEN\n",
+        "          'Not Delivered'\n",
+        "        ELSE 'Other'\n",
+        "      END\n",
+        "  )"
+      ]
+    },
+    {
+      "name": "delivered_kpi",
+      "displayName": "Delivered Orders KPI",
+      "queryLines": [
+        "SELECT\n",
+        "  SUM(\n",
+        "    CASE\n",
+        "      WHEN delivery_status = 'Delivered' THEN order_count\n",
+        "      ELSE 0\n",
+        "    END\n",
+        "  ) AS delivered_count\n",
+        "FROM\n",
+        "  (\n",
+        "    WITH order_events AS (\n",
+        "      SELECT\n",
+        "        load_id,\n",
+        "        MAX(\n",
+        "          CASE\n",
+        "            WHEN event_type = 'DELIVERY' THEN 1\n",
+        "            ELSE 0\n",
+        "          END\n",
+        "        ) AS has_delivery\n",
+        "      FROM\n",
+        "        supply_chain.silver.silver_delivery_events\n",
+        "      GROUP BY\n",
+        "        load_id\n",
+        "    )\n",
+        "    SELECT\n",
+        "      CASE\n",
+        "        WHEN oe.has_delivery = 1 THEN 'Delivered'\n",
+        "        ELSE 'Other'\n",
+        "      END AS delivery_status,\n",
+        "      COUNT(*) AS order_count\n",
+        "    FROM\n",
+        "      supply_chain.silver.silver_loads ao\n",
+        "        LEFT JOIN order_events oe\n",
+        "          ON ao.load_id = oe.load_id\n",
+        "    GROUP BY\n",
+        "      CASE\n",
+        "        WHEN oe.has_delivery = 1 THEN 'Delivered'\n",
+        "        ELSE 'Other'\n",
+        "      END\n",
+        "  )"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "b35ebcf6",
+      "displayName": "DASHBOARD",
+      "layout": [
+        {
+          "widget": {
+            "name": "i",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "9c066e52",
+                  "fields": [
+                    {
+                      "name": "location_id",
+                      "expression": "`location_id`"
+                    },
+                    {
+                      "name": "sku_id",
+                      "expression": "`sku_id`"
+                    },
+                    {
+                      "name": "sum(closing_stock)",
+                      "expression": "SUM(`closing_stock`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "showDescription": false,
+                "title": "20 INVENTORY_STOCKs"
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sku_id",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(closing_stock)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "extra": [
+                  {
+                    "fieldName": "location_id"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "demand-supply-analysis",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "e9a28ecd",
+                  "fields": [
+                    {
+                      "name": "status",
+                      "expression": "`status`"
+                    },
+                    {
+                      "name": "sku_id",
+                      "expression": "`sku_id`"
+                    },
+                    {
+                      "name": "total_demand",
+                      "expression": "`total_demand`"
+                    },
+                    {
+                      "name": "total_supply",
+                      "expression": "`total_supply`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "DEMAND VS SUPPLY"
+              },
+              "widgetType": "scatter",
+              "encodings": {
+                "x": {
+                  "fieldName": "total_demand",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "total_supply",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "status",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "EXCESS",
+                        "color": {
+                          "themeColorType": "selectionColor"
+                        }
+                      },
+                      {
+                        "value": "SHORTAGE",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      },
+                      {
+                        "value": "BALANCED",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 3
+                        }
+                      }
+                    ]
+                  }
+                },
+                "extra": [
+                  {
+                    "fieldName": "sku_id"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "7bf8afbf",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<span style=\"font-size: 18px;\">**DEMAND AND SUPPLY ANALYSIS**</span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "product_gap_chart",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "4ca61970",
+                  "fields": [
+                    {
+                      "name": "status",
+                      "expression": "`status`"
+                    },
+                    {
+                      "name": "product_label",
+                      "expression": "`product_label`"
+                    },
+                    {
+                      "name": "gap",
+                      "expression": "`gap`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Product Demand-Supply Gap"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "product_label",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "gap",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "status",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "SHORTAGE",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      },
+                      {
+                        "value": "EXCESS",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 1
+                        }
+                      },
+                      {
+                        "value": "BALANCED",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 3
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 11,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "a42217d2",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<span style=\"font-size: 18px;\">**SUPPLIER PERFORMANCE ANALYSIS**</span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 16,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "supplier",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "3ddf3990",
+                  "fields": [
+                    {
+                      "name": "performance_status",
+                      "expression": "`performance_status`"
+                    },
+                    {
+                      "name": "sum(avg_received_qty)",
+                      "expression": "SUM(`avg_received_qty`)"
+                    },
+                    {
+                      "name": "supplier_id",
+                      "expression": "`supplier_id`"
+                    },
+                    {
+                      "name": "supplier_label",
+                      "expression": "`supplier_label`"
+                    },
+                    {
+                      "name": "sum(avg_open_qty)",
+                      "expression": "SUM(`avg_open_qty`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "SUPPLIER ANALYSIS"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "supplier_label",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(avg_open_qty)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "performance_status",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "POOR",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      },
+                      {
+                        "value": "GOOD",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 7
+                        }
+                      },
+                      {
+                        "value": "EXCELLENT",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 1
+                        }
+                      }
+                    ]
+                  }
+                },
+                "extra": [
+                  {
+                    "fieldName": "sum(avg_received_qty)"
+                  },
+                  {
+                    "fieldName": "supplier_id"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 17,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "p1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "3ddf3990",
+                  "fields": [
+                    {
+                      "name": "countdistinct(performance_status)",
+                      "expression": "COUNT(DISTINCT `performance_status`)"
+                    },
+                    {
+                      "name": "performance_status",
+                      "expression": "`performance_status`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "PIE REPRESENTATION"
+              },
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "countdistinct(performance_status)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "performance_status",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 23,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "f18fc52b",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<span style=\"font-size:18px\">**LOGISTICS COST AND REVENUE ANALYSIS**</span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 29,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "r1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "3659d188",
+                  "fields": [
+                    {
+                      "name": "booking_type",
+                      "expression": "`booking_type`"
+                    },
+                    {
+                      "name": "sum(total_revenue)",
+                      "expression": "SUM(`total_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "REVENUE BY BOOKING TYPE"
+              },
+              "mark": {
+                "colors": [
+                  "#A8AB40",
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "booking_type",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(total_revenue)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 30,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "total-cost-analysis",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "edabb80d",
+                  "fields": [
+                    {
+                      "name": "cost_type",
+                      "expression": "`cost_type`"
+                    },
+                    {
+                      "name": "sum(amount)",
+                      "expression": "SUM(`amount`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": " COST BREAKDOWN",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "cost_type",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(amount)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 30,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "677cc38f",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<span style=\"font-size: 18px;\">**INEVENTORY SNAPSHOT- CURRENT STOCKS**</span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_total_stock",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "total_stock_kpi",
+                  "fields": [
+                    {
+                      "name": "total_stock",
+                      "expression": "`total_stock`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Total Stock",
+                "contentAlignment": "center"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_stock",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_total_orders",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "total_orders_kpi",
+                  "fields": [
+                    {
+                      "name": "total_orders",
+                      "expression": "`total_orders`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Total Orders",
+                "contentAlignment": "center"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_orders",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 1,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_total_revenue",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "total_revenue_kpi",
+                  "fields": [
+                    {
+                      "name": "total_revenue",
+                      "expression": "`total_revenue`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Total Order Value",
+                "contentAlignment": "center"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_revenue",
+                  "format": {
+                    "type": "number-currency",
+                    "abbreviation": "compact",
+                    "currencyCode": "USD"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 1,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "799126e3",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "76564f48",
+                  "fields": [
+                    {
+                      "name": "booking_type",
+                      "expression": "`booking_type`"
+                    },
+                    {
+                      "name": "sum(total_cost)",
+                      "expression": "SUM(`total_cost`)"
+                    },
+                    {
+                      "name": "sum(profit)",
+                      "expression": "SUM(`profit`)"
+                    },
+                    {
+                      "name": "sum(total_revenue)",
+                      "expression": "SUM(`total_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "PROFITABILITY ANALYSIS"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "booking_type",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "sum(total_cost)"
+                    },
+                    {
+                      "fieldName": "sum(profit)"
+                    },
+                    {
+                      "fieldName": "sum(total_revenue)"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 36,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "detention_header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<span style=\"font-size: 18px;\">**SHIPMENT DETENTION ANALYSIS**</span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 42,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "detention_by_warehouse",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "20e1afff",
+                  "fields": [
+                    {
+                      "name": "warehouse_id",
+                      "expression": "`warehouse_id`"
+                    },
+                    {
+                      "name": "avg(detention_minutes)",
+                      "expression": "AVG(`detention_minutes`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Detention by Warehouse"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "warehouse_id",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "avg(detention_minutes)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 43,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "detention_level_count",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "20e1afff",
+                  "fields": [
+                    {
+                      "name": "detention_level",
+                      "expression": "`detention_level`"
+                    },
+                    {
+                      "name": "count(shipment_id)",
+                      "expression": "COUNT(`shipment_id`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Detention Level Distribution"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "detention_level",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "count(shipment_id)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "detention_level",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "HIGH",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      },
+                      {
+                        "value": "MEDIUM",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 6
+                        }
+                      },
+                      {
+                        "value": "LOW",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 1
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 43,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "detention_total",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "20e1afff",
+                  "fields": [
+                    {
+                      "name": "detention_level",
+                      "expression": "`detention_level`"
+                    },
+                    {
+                      "name": "warehouse_id",
+                      "expression": "`warehouse_id`"
+                    },
+                    {
+                      "name": "sum(detention_minutes)",
+                      "expression": "SUM(`detention_minutes`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Total Detention by Level"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "warehouse_id",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(detention_minutes)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "detention_level",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "HIGH",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      },
+                      {
+                        "value": "MEDIUM",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 6
+                        }
+                      },
+                      {
+                        "value": "LOW",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 1
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 49,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "delivery_status_header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<span style=\"font-size: 18px;\">**ORDER DELIVERY STATUS**</span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 55,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_delivered",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "delivered_kpi",
+                  "fields": [
+                    {
+                      "name": "delivered_count",
+                      "expression": "`delivered_count`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Delivered Orders",
+                "contentAlignment": "center"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "delivered_count",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 56,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_in_transit",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "in_transit_kpi",
+                  "fields": [
+                    {
+                      "name": "in_transit_count",
+                      "expression": "`in_transit_count`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "In Transit Orders",
+                "contentAlignment": "center"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "in_transit_count",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 56,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_not_delivered",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "not_delivered_kpi",
+                  "fields": [
+                    {
+                      "name": "not_delivered_count",
+                      "expression": "`not_delivered_count`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Not Delivered Orders",
+                "contentAlignment": "center"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "not_delivered_count",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 56,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "delivery_status_chart",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "delivery_status",
+                  "fields": [
+                    {
+                      "name": "delivery_status",
+                      "expression": "`delivery_status`"
+                    },
+                    {
+                      "name": "order_count",
+                      "expression": "`order_count`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Delivery Status Distribution"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "delivery_status",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "order_count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "delivery_status",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Delivered",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 1
+                        }
+                      },
+                      {
+                        "value": "In Transit",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 6
+                        }
+                      },
+                      {
+                        "value": "Not Delivered",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 59,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "82d70b7f",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "6270bb87",
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true
+              },
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": []
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
