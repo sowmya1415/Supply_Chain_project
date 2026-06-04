@@ -175,7 +175,7 @@ This project demonstrates how raw data can be transformed into actionable insigh
 
 ## 👩‍💻 Author
 
-**Sowss**
+**Sowmya**
 Information Technology Student
 Supply Chain Analytics Project
 
